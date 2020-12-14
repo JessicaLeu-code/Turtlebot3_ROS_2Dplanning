@@ -8,7 +8,7 @@ This repo contains a simulation example of [Turtlebot3](https://emanual.robotis.
 To install dependent packages, folloe the instructions in [Install Simulation Package](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation). 
 
 
-## Run example
+## Run the example
 
 Open a terminal, copy and run the following command.
 
