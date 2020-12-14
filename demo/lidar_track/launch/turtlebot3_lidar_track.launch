@@ -1,0 +1,16 @@
+<launch>
+  <include file="$(find turtlebot3_bringup)/launch/turtlebot3_core.launch"/>
+
+  <remap from="odom" to="om_with_tb3/odom"/>
+  <remap from="scan" to="scan"/>
+  <remap from="cmd_vel" to="om_with_tb3/cmd_vel"/>
+
+  <include file="$(find laserline)/launch/laserline.launch"/>
+
+  <node name="human" pkg="lidar_track" type="find_lines_node.py" args="-g"/>
+
+  <node name="prediction" pkg="planning" type="prediction_barrier.py">
+    <param name="~barrier_radius" value="1.2" />
+  </node>
+
+</launch>

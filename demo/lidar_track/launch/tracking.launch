@@ -1,0 +1,26 @@
+<launch>
+	<node name="human0" pkg="lidar_track" type="find_lines_node.py" output="screen">
+		<remap from="publish_line_markers" to="line_0_tagged"/>
+		<remap from="obstacles_viz" to="obj0"/>
+	</node>
+	<node name="human1" pkg="lidar_track" type="find_lines_node.py" output="screen">
+		<remap from="publish_line_markers" to="line_1_tagged"/>
+		<remap from="obstacles_viz" to="obj1"/>
+	</node>
+	<node name="human2" pkg="lidar_track" type="find_lines_node.py" output="screen">
+		<remap from="publish_line_markers" to="line_2_tagged"/>
+		<remap from="obstacles_viz" to="obj2"/>
+	</node>
+	<node name="human3" pkg="lidar_track" type="find_lines_node.py" output="screen">
+		<remap from="publish_line_markers" to="line_3_tagged"/>
+		<remap from="obstacles_viz" to="obj3"/>
+	</node>
+	<node name="human4" pkg="lidar_track" type="find_lines_node.py" output="screen">
+		<remap from="publish_line_markers" to="line_4_tagged"/>
+		<remap from="obstacles_viz" to="obj4"/>
+	</node>
+	<node name="human5" pkg="lidar_track" type="find_lines_node.py" output="screen">
+		<remap from="publish_line_markers" to="line_5_tagged"/>
+		<remap from="obstacles_viz" to="obj5"/>
+	</node>
+</launch>

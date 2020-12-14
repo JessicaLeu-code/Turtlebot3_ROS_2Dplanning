@@ -1,0 +1,10 @@
+<launch>
+  <remap from="odom" to="om_with_tb3/odom"/>
+  <remap from="cmd_vel" to="om_with_tb3/cmd_vel"/>
+
+  <node name="follower" pkg="low_level_control" type="follow_waypoints.py" output="screen">
+    <param name="~tracking_mode" value="1" />
+    <param name="~look_ahead_mode" value="1" />
+    <param name="~look_ahead_dist" value="2" />
+  </node>
+</launch>
