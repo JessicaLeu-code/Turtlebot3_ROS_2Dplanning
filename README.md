@@ -12,7 +12,11 @@ run `RRT_planning/RRT_3_test.m` to plan for the mobile platform with RRT-ILQR.
 ## Run example
 
 Open a terminal, copy and run the following command.
+
 `$ roslaunch lidar_track turtlebot3_lidar_track_mode.launch`
+
 To change the goal of the robot, run
+
 `$ roslaunch demo_teleop turtlebot3_teleop_key.launch`
+
 ![GitHub Logo](/pic/2d_demo.gif)
