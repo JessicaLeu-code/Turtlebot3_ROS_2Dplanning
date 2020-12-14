@@ -6,7 +6,6 @@ This repo contains a simulation example of [Turtlebot3](https://emanual.robotis.
 ## Get ready
 
 To install dependent packages, folloe the instructions in [Install Simulation Package](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation). 
-run `RRT_planning/RRT_3_test.m` to plan for the mobile platform with RRT-ILQR.
 
 
 ## Run example
