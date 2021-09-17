@@ -4,7 +4,7 @@ This repo contains a simulation example of [Turtlebot3](https://emanual.robotis.
 
 
 ## Get ready
-The setup is tested with Ubuntu 18.04. To install dependent packages, folloe the instructions in 
+The setup is tested with Ubuntu 18.04. (Windows user can setup an Ubuntu environmnet by following [these instructions](https://youtu.be/IL7Jd9rjgrM).)To install dependent packages, folloe the instructions in 
 1. [Setup turtlebot3 on PC](https://emanual.robotis.com/docs/en/platform/turtlebot3/quick-start/#pc-setup)
 2. [Install Simulation Package](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation). 
 3. Clone this repository in your ``<your_dir>/catkin_ws``.
