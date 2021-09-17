@@ -1,0 +1,6 @@
+<launch>
+  <include file="$(find research)/launch/fake_turtlebot.launch"/>
+  <!-- <include file="$(find turtlebot3_bringup)/launch/turtlebot3_core.launch"/> -->
+  <node name="obstacle" pkg="lidar_track" type="find_lines_node.py" output="screen"/>
+  
+</launch>

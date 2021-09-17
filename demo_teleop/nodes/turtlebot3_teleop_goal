@@ -1,0 +1,238 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2011, Willow Garage, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#    * Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#    * Neither the name of the Willow Garage, Inc. nor the names of its
+#      contributors may be used to endorse or promote products derived from
+#       this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import rospy
+import numpy as np
+from geometry_msgs.msg import Twist, Point32, PoseStamped
+from std_msgs.msg import UInt16, Float32
+from nav_msgs.msg import Odometry, Path
+from tf.transformations import euler_from_quaternion
+import sys, select, os
+if os.name == 'nt':
+  import msvcrt
+else:
+  import tty, termios
+
+
+msg = """
+Control Your TurtleBot3!
+---------------------------
+Moving around:
+        w
+      a s d    
+        
+
+wasd: Move goal
+o: change step
+
+
+space key: force stop
+
+1-6: select goal 1-6
+
+z: switch to goal tracking mode
+x: switch to assistant mode
+
+o: change dt
+p: test trajectory
+
+CTRL-C to quit
+"""
+
+e = """
+Communications Failed
+"""
+
+def getKey():
+    if os.name == 'nt':
+      return msvcrt.getch()
+
+    tty.setraw(sys.stdin.fileno())
+    rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
+    if rlist:
+        key = sys.stdin.read(1)
+    else:
+        key = ''
+
+    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+    return key
+
+class Robot:
+    def __init__(self):
+        self.x = [0,0,0,0,0]
+
+    def odom_callback(self, msg):
+        _,_,yaw = euler_from_quaternion([msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w])
+        self.x = [msg.pose.pose.position.x,
+                  msg.pose.pose.position.y,
+                  yaw,
+                  msg.twist.twist.linear.x,
+                  msg.twist.twist.angular.z]
+
+
+
+
+if __name__=="__main__":
+    if os.name != 'nt':
+        settings = termios.tcgetattr(sys.stdin)
+
+    rospy.init_node('turtlebot3_teleop')
+    pub = rospy.Publisher('goal_state', Point32, queue_size=10)
+    mode_pub = rospy.Publisher('mode', UInt16, queue_size=1)
+    path_pub = rospy.Publisher('/path', Path, queue_size=100)
+    dt_pub = rospy.Publisher('/dt', Float32, queue_size=1)
+
+    ro = Robot()
+
+    rospy.Subscriber('/odom', Odometry, ro.odom_callback)
+
+
+
+    turtlebot3_model = rospy.get_param("model", "waffle")
+
+    status = 0
+    goal = Point32()
+    mode = UInt16()
+    mode.data = 0
+    goal.x = 0
+    goal.y = 0
+    goal.z = 0 
+    step = 1.0
+    spd = 100
+
+    try:
+        print msg
+        while(1):
+            key = getKey()
+            if key == 'w' :
+                goal.y += step
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)
+            elif key == 's' :
+                goal.y -= step
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)
+            elif key == 'a' :
+                goal.x -= step
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)
+            elif key == 'd' :
+                goal.x += step
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)
+            elif key == 'o' :
+                step = input("dt in seconds:")
+                print("dt is now " + str(step))
+                dt_pub.publish(Float32(step))
+            elif key == 'l' :
+                dt_pub.publish(Float32(step))
+            elif key == '1' :
+                goal.x = -2
+                goal.y = 4
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)
+            elif key == '2' :
+                goal.x = -2
+                goal.y = 2
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)
+            elif key == '3' :
+                goal.x = -1
+                goal.y = 1
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)
+            elif key == '4' :
+                goal.x = 1
+                goal.y = 1
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)  
+            elif key == '5' :
+                goal.x = 2
+                goal.y = 2
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)
+            elif key == '6' :
+                goal.x = 2
+                goal.y = 4
+                print (str(goal.x) + ', ' + str(goal.y))
+                pub.publish(goal)
+            elif key == 'z' :
+                print("GOAL FOLLOWING MODE")
+                mode.data = 0
+                mode_pub.publish(mode)  
+            elif key == 'x' :
+                print("ASSISTANT MODE")
+                mode.data = 1
+                mode_pub.publish(mode) 
+            elif key == 'p' :
+                def to_path():
+                    p1x = []
+                    p1y = []
+                    theta = -np.pi
+                    thinc = np.pi/12
+                    for i in range(12):
+                        center = [ro.x[0] + 0.25, ro.x[1]]
+                        p1x.append(center[0]+0.25*np.cos(theta))
+                        p1y.append(center[1]+0.25*np.sin(theta))    
+                        theta += thinc
+                        
+                    p2x = np.linspace(center[0]+0.25, center[0]+0.75, 9)
+                    p2y = np.linspace(center[1], center[1], 9)
+
+                    poseArray = []
+                    for i in range(len(p1x)):
+                        poses = PoseStamped()
+                        poses.pose.position.x = p1x[i]
+                        poses.pose.position.y = p1y[i]
+                        poseArray += [poses]
+                    for i in range(len(p2x)):
+                        poses = PoseStamped()
+                        poses.pose.position.x = p2x[i]
+                        poses.pose.position.y = p2y[i]
+                        poseArray += [poses]
+                    waypoints = Path()
+                    waypoints.header.frame_id = 'odom'
+                    waypoints.poses = poseArray
+                    return waypoints
+                path = to_path()
+                path_pub.publish(path)            
+
+            else:
+                if (key == '\x03'):
+                    break
+
+            if status == 20 :
+                print msg
+                status = 0
+
+    except:
+        print e
+
+    if os.name != 'nt':
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)

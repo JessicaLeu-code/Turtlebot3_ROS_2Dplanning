@@ -1,0 +1,20 @@
+<launch>
+    <node pkg="lidar_track" type="cluster_filter.py" name="cluster_filter0">
+        <remap from="publish_line_markers" to="line_0"/>
+    </node>
+    <node pkg="lidar_track" type="cluster_filter.py" name="cluster_filter1">
+        <remap from="publish_line_markers" to="line_1"/>
+    </node>
+    <node pkg="lidar_track" type="cluster_filter.py" name="cluster_filter2">
+        <remap from="publish_line_markers" to="line_2"/>
+    </node>
+    <node pkg="lidar_track" type="cluster_filter.py" name="cluster_filter3">
+        <remap from="publish_line_markers" to="line_3"/>
+    </node>
+    <node pkg="lidar_track" type="cluster_filter.py" name="cluster_filter4">
+        <remap from="publish_line_markers" to="line_4"/>
+    </node>
+    <node pkg="lidar_track" type="cluster_filter.py" name="cluster_filter5">
+        <remap from="publish_line_markers" to="line_5"/>
+    </node>
+</launch>

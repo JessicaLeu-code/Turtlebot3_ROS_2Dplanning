@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="lidar_track" type="cluster_filter.py" name="cluster_filter2">
+    </node>
+</launch>

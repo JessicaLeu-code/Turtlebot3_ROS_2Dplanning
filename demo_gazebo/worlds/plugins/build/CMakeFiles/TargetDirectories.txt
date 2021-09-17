@@ -1,0 +1,5 @@
+/home/mw542/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/plugins/build/CMakeFiles/edit_cache.dir
+/home/mw542/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/plugins/build/CMakeFiles/rebuild_cache.dir
+/home/mw542/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/plugins/build/CMakeFiles/animated_box.dir
+/home/mw542/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/plugins/build/CMakeFiles/integrated_main.dir
+/home/mw542/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/plugins/build/CMakeFiles/independent_listener.dir

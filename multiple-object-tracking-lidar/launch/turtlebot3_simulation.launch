@@ -1,0 +1,10 @@
+<launch>
+  <arg name="cmd_vel" default="/cmd_vel"/>
+  <arg name="name" default="turtlebot3"/>
+
+  <param name="cmd_vel_topic_name" value="$(arg cmd_vel)"/>
+
+  <node name="convert_LS_2_PC2" pkg="multiple-object-tracking-lidar" type="l2c2" required="true" output="screen"/>
+  <node name="cluster_and_track" pkg="multiple-object-tracking-lidar" type="kf_tracker" required="true" output="screen"/>
+
+</launch>

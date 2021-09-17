@@ -1,0 +1,19 @@
+<launch>
+
+  <!-- APPLY LASERSCAN MASK -->
+  <node name="LaserScan_mask" pkg="turtlebot3_sensor" type="MASK" required="true" output="screen"/>
+
+
+  <node name="laserline" pkg="laserline" type="laserline" output="screen">
+    <param name="~frame_id" value="base_scan" />
+    <param name="~scan_topic" value="masked_scan" />
+    <param name="~frequency" value="50.0" />
+    <param name="~show_lines" value="true" />
+    <param name="~least_thresh" value="0.04" />
+    <param name="~min_line_length" value="0.06" />
+    <param name="~predict_distance" value="0.1" />
+    <param name="~seed_line_points" value="6" />
+    <param name="~min_line_points" value="6" />
+  </node>
+</launch>
+

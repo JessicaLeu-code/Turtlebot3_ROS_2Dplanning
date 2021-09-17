@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- run pointcloud_to_laserscan node -->
+    <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan0">
+
+        <remap from="cloud_in" to="cluster_0"/>
+        <remap from="scan" to="scan_0"/>
+        <rosparam>
+            transform_tolerance: 0.01
+            min_height: 0.0
+            max_height: 1.0
+
+            angle_min: -3.141 # -M_PI/2
+            angle_max: 3.141 # M_PI/2
+            angle_increment: 0.0175 # M_PI/360.0
+            scan_time: 0.0
+            range_min: 0.45
+            range_max: 4.0
+            use_inf: true
+            inf_epsilon: 1.0
+
+            # Concurrency level, affects number of pointclouds queued for processing and number of threads used
+            # 0 : Detect number of cores
+            # 1 : Single threaded
+            # 2->inf : Parallelism level
+            concurrency_level: 1
+        </rosparam>
+    </node>
+
+    <!-- run pointcloud_to_laserscan node -->
+    <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan1">
+
+        <remap from="cloud_in" to="cluster_1"/>
+        <remap from="scan" to="scan_1"/>
+        <rosparam>
+            transform_tolerance: 0.01
+            min_height: 0.0
+            max_height: 1.0
+
+            angle_min: -3.141 # -M_PI/2
+            angle_max: 3.141 # M_PI/2
+            angle_increment: 0.0175 # M_PI/360.0
+            scan_time: 0.0
+            range_min: 0.45
+            range_max: 4.0
+            use_inf: true
+            inf_epsilon: 1.0
+
+            # Concurrency level, affects number of pointclouds queued for processing and number of threads used
+            # 0 : Detect number of cores
+            # 1 : Single threaded
+            # 2->inf : Parallelism level
+            concurrency_level: 1
+        </rosparam>
+    </node>
+
+    <!-- run pointcloud_to_laserscan node -->
+    <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan2">
+
+        <remap from="cloud_in" to="cluster_2"/>
+        <remap from="scan" to="scan_2"/>
+
+        <rosparam>
+            transform_tolerance: 0.01
+            min_height: 0.0
+            max_height: 1.0
+
+            angle_min: -3.141 # -M_PI/2
+            angle_max: 3.141 # M_PI/2
+            angle_increment: 0.0175 # M_PI/360.0
+            scan_time: 0.0
+            range_min: 0.45
+            range_max: 4.0
+            use_inf: true
+            inf_epsilon: 1.0
+
+            # Concurrency level, affects number of pointclouds queued for processing and number of threads used
+            # 0 : Detect number of cores
+            # 1 : Single threaded
+            # 2->inf : Parallelism level
+            concurrency_level: 1
+        </rosparam>
+
+    </node>
+
+    <!-- run pointcloud_to_laserscan node -->
+    <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan3">
+
+        <remap from="cloud_in" to="cluster_3"/>
+        <remap from="scan" to="scan_3"/>
+        <rosparam>
+            transform_tolerance: 0.01
+            min_height: 0.0
+            max_height: 1.0
+
+            angle_min: -3.141 # -M_PI/2
+            angle_max: 3.141 # M_PI/2
+            angle_increment: 0.0175 # M_PI/360.0
+            scan_time: 0.0
+            range_min: 0.45
+            range_max: 4.0
+            use_inf: true
+            inf_epsilon: 1.0
+
+            # Concurrency level, affects number of pointclouds queued for processing and number of threads used
+            # 0 : Detect number of cores
+            # 1 : Single threaded
+            # 2->inf : Parallelism level
+            concurrency_level: 1
+        </rosparam>
+    </node>
+
+    <!-- run pointcloud_to_laserscan node -->
+    <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan4">
+
+        <remap from="cloud_in" to="cluster_4"/>
+        <remap from="scan" to="scan_4"/>
+        <rosparam>
+            transform_tolerance: 0.01
+            min_height: 0.0
+            max_height: 1.0
+
+            angle_min: -3.141 # -M_PI/2
+            angle_max: 3.141 # M_PI/2
+            angle_increment: 0.0175 # M_PI/360.0
+            scan_time: 0.0
+            range_min: 0.45
+            range_max: 4.0
+            use_inf: true
+            inf_epsilon: 1.0
+
+            # Concurrency level, affects number of pointclouds queued for processing and number of threads used
+            # 0 : Detect number of cores
+            # 1 : Single threaded
+            # 2->inf : Parallelism level
+            concurrency_level: 1
+        </rosparam>
+    </node>
+
+    <!-- run pointcloud_to_laserscan node -->
+    <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan5">
+
+        <remap from="cloud_in" to="cluster_5"/>
+        <remap from="scan" to="scan_5"/>
+        <rosparam>
+            transform_tolerance: 0.01
+            min_height: 0.0
+            max_height: 1.0
+
+            angle_min: -3.141 # -M_PI/2
+            angle_max: 3.141 # M_PI/2
+            angle_increment: 0.0175 # M_PI/360.0
+            scan_time: 0.0
+            range_min: 0.45
+            range_max: 4.0
+            use_inf: true
+            inf_epsilon: 1.0
+
+            # Concurrency level, affects number of pointclouds queued for processing and number of threads used
+            # 0 : Detect number of cores
+            # 1 : Single threaded
+            # 2->inf : Parallelism level
+            concurrency_level: 1
+        </rosparam>
+
+    </node>
+
+
+</launch>
