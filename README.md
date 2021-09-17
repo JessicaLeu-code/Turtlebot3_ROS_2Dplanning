@@ -55,11 +55,16 @@ The setup is tested with Ubuntu 18.04. (Windows user can setup an Ubuntu environ
       $ cd ~/<your_dir>/catkin_ws/src && clone https://github.com/ROBOTIS-GIT/turtlebot3.git
       ```
 5. Install packages
-  - Install (update) basic packages: ``python -m pip install --user numpy scipy matplotlib``
-  - Install pyclipper: ``pip install pyclipper`` (you may need `pip install --upgrade setuptools` if am error occures)
-  - Install pykalman: ``pip install pykalman``
-  - Install cvxopt: ``pip install cvxopt``
-6. Build the packages: ``cd ~<your_dir>\catkin_ws && catkin_make``
+  - Install ROS related packages:
+    - `$ sudo apt-get install ros-melodic-driver-base`
+    - `$ sudo apt-get install ros-melodic-pol-ros`
+    - `$ sudo apt-get install ros-melodic-tf2-sensor-msg`
+  - Install libcurses5-dev`$ sudo apt-get install libcurses5-dev`
+  - Install (update) basic packages: ``$ python -m pip install --user numpy scipy matplotlib``
+  - Install pyclipper: ``$ pip install pyclipper`` (you may need `$ pip install --upgrade setuptools` if am error occures)
+  - Install pykalman: ``$ pip install pykalman``
+  - Install cvxopt: ``$ pip install cvxopt``
+6. Build the packages: ``$ cd ~<your_dir>\catkin_ws && catkin_make``
 
 ## Run the example
 
