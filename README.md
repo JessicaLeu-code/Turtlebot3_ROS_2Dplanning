@@ -24,10 +24,10 @@ cd ~/<your_dir>/catkin_ws && git clone https://github.com/JessicaLeu-code/Turtle
     ```
 6. Install packages
   - Install (update) basic packages: ``python -m pip install --user numpy scipy matplotlib``
-  - Install pyclipper: ``pip install pyclipper`` (you may need `pip install --upgrade setuptools` if error occures)
+  - Install pyclipper: ``pip install pyclipper`` (you may need `pip install --upgrade setuptools` if am error occures)
   - Install pykalman: ``pip install pykalman``
   - Install cvxopt: ``pip install cvxopt``
-7. Build the packages: cd ~<your_dir>\catkin_ws && catkin_make 
+7. Build the packages: ``cd ~<your_dir>\catkin_ws && catkin_make``
 
 ## Run the example
 
