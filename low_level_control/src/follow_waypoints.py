@@ -20,8 +20,8 @@ def follow_waypoints():
 
     rospy.Subscriber('/path', Path, r.path_callback)
     rospy.Subscriber('/odom', Odometry, r.odom_callback)
-    rospy.Subscriber('/obstacle1_poly', PolygonStamped, r.obstacle_poly_callback)
-    rospy.Subscriber('/obstacle1_v', Twist, r.obstacle_v_callback)
+    rospy.Subscriber('/table_poly', PolygonStamped, r.obstacle_poly_callback)
+    rospy.Subscriber('/table_v', Twist, r.obstacle_v_callback)
     rospy.Subscriber('/dt', Float32, r.dt_callback)
 
     cmv_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)

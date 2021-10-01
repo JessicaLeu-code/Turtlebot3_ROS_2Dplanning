@@ -17,8 +17,8 @@ def sim():
 
 	rospy.Subscriber('/odom', Odometry, o.odom_callback)
 	rospy.Subscriber('/filteredGPS', Point, o.filter_callback)
-	rospy.Subscriber('/obstacle1_poly', PolygonStamped, o.obstacle_poly_callback) # from fake_human nodes
-	rospy.Subscriber('/obstacle1_v', Twist, o.obstacle_vel_callback)
+	rospy.Subscriber('/table_poly', PolygonStamped, o.obstacle_poly_callback) # from fake_human nodes
+	rospy.Subscriber('/table_v', Twist, o.obstacle_vel_callback)
 	rospy.Subscriber('/obstacle2_poly', Polygons, o.lobstacle_poly_callback) # from lidar
 	#rospy.Subscriber('/obstacle2_v', Twist, o.lobstacle_vel_callback)
 	rospy.Subscriber('/human', Point32, o.human_callback)

@@ -16,8 +16,8 @@ def sim():
 
     rospy.Subscriber('/odom', Odometry, o.odom_callback)
     rospy.Subscriber('/filteredGPS', Point, o.filter_callback)
-    rospy.Subscriber('/obstacle1_poly', PolygonStamped, o.obstacle_poly_callback)
-    rospy.Subscriber('/obstacle1_v', Twist, o.obstacle_vel_callback)
+    rospy.Subscriber('/table_poly', PolygonStamped, o.obstacle_poly_callback)
+    rospy.Subscriber('/table_v', Twist, o.obstacle_vel_callback)
     rospy.Subscriber('/goal_state', Point32, o.goal_callback)
 
     path_pub = rospy.Publisher('/path', Path, queue_size=100)

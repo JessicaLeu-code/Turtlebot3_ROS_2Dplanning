@@ -4,9 +4,11 @@ import numpy as np
 from geometry_msgs.msg import Twist, PolygonStamped, Point32
 
 def sim():
-	rospy.init_node('obstacle')	
-	obstacle_poly_pub = rospy.Publisher('obstacle1_poly', PolygonStamped, queue_size=1)
-	obstacle_v_pub = rospy.Publisher('obstacle1_v', Twist, queue_size=1)
+	rospy.init_node('virtual_table')	
+	#obstacle_poly_pub = rospy.Publisher('obstacle1_poly', PolygonStamped, queue_size=1)
+	#obstacle_v_pub = rospy.Publisher('obstacle1_v', Twist, queue_size=1)
+	table_poly_pub = rospy.Publisher('table_poly', PolygonStamped, queue_size=1)
+	table_v_pub = rospy.Publisher('table_v', Twist, queue_size=1)
 	# obstacle_rviz_pub = rospy.Publisher('obstacles', Polygons, queue_size=100)
 
 	vertices = [[1, 1, -1, -1], [5, 2, 2, 5]]
@@ -15,10 +17,10 @@ def sim():
 	rate = rospy.Rate(10)
 
 	while not rospy.is_shutdown():
-		obstacle_poly_pub.publish(obstacle.toPolygonStamped())
-		obstacle_v_pub.publish(obstacle.toTwist())
+		table_poly_pub.publish(obstacle.toPolygonStamped())
+		table_v_pub.publish(obstacle.toTwist())
 		# obstacle_rviz_pub.publish([obstacle.toPolygonStamped()])
-		obstacle.step()
+		#obstacle.step()
 		rate.sleep()
 
 class Obstacle:
@@ -27,7 +29,7 @@ class Obstacle:
 		self.v = np.array(vel).T * 1.0
 		self.dt = 0.1
 		self.i = 0
-
+	'''
 	def step(self):
 		if self.i == 150:
 			self.v = np.array([[0], [0]])
@@ -45,6 +47,7 @@ class Obstacle:
 				self.v = -1*self.v
 		self.poly += self.v * self.dt
 		self.i += 1 
+	'''
 
 	def toPolygonStamped(self):
 		p = PolygonStamped()
@@ -59,6 +62,7 @@ class Obstacle:
 		t = Twist()
 		t.linear.x = self.v[0]
 		t.linear.y = self.v[1]
+		print(self.v)
 		return t
 
 if __name__ == '__main__':
