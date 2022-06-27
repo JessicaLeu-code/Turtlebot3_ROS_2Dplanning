@@ -48,7 +48,7 @@ The setup is tested with Ubuntu 18.04. (Windows user can setup an Ubuntu environ
   This Demo is based on old version of turtlebot3 open-source code. Therefore, some addition files are needed to run the demo.
     - remove `turtlebot3_simulations/turtlebot3_gazebo`:
       ```
-      $ cd ~/<your_dir>/catkin_ws/src/urtlebot3_simulations && sudo rm -r turtlebot3_gazebo
+      $ cd ~/<your_dir>/catkin_ws/src/turtlebot3_simulations && sudo rm -r turtlebot3_gazebo
       ```
     - Download ``turtlebot3`` dependencies: 
       ```
