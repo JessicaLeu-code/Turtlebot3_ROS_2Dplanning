@@ -18,13 +18,23 @@
 import numpy as np
 import rospy
 import time
-from geometry_msgs.msg import Twist, PolygonStamped, Point32
+from geometry_msgs.msg import Twist, PolygonStamped, Point32, PoseStamped
 from gazebo_msgs.msg import ModelState, ModelStates
+from nav_msgs.msg import Path, Odometry
+from tf.transformations import euler_from_quaternion
+
+import logging
 
 
 
 def sim():
+    logger = logging.getLogger("testtest")
+    sh = logging.StreamHandler()
+    logger.addHandler(sh)
+
     rospy.init_node('moving_obstacle_virtual_table')
+
+    c = Callback()
 
   #  rospy.init_node('virtual_table')  
 
@@ -33,27 +43,38 @@ def sim():
     table_poly_pub = rospy.Publisher('table_poly', PolygonStamped, queue_size=1)
     table_v_pub = rospy.Publisher('table_v', Twist, queue_size=1)
     pub_model =  rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=1)
+    trajectory_pub = rospy.Publisher('trajectory', Path, queue_size=10)
+
+    rospy.Subscriber('/path', Path, c.path_callback)
+    rospy.Subscriber('/odom', Odometry, c.odom_callback)
+
 
     # obstacle_rviz_pub = rospy.Publisher('obstacles', Polygons, queue_size=100)
 
-    vertices = [[1, 1, -1, -1], [5, 2, 2, 5]]
+    vertices = [[1, 1, -1, -1], [5, 4,  4, 5]]
     vel = [[0, 0]]
     obstacle2 = Obstacle(vertices, vel)
     rate = rospy.Rate(10)
 
-   
     t = 0
+
     
     while not rospy.is_shutdown():
         table_poly_pub.publish(obstacle2.toPolygonStamped())
         table_v_pub.publish(obstacle2.toTwist())
+        tra = c.toTrajectory()
+
+        if tra is not None:
+            trajectory_pub.publish(tra)
         # obstacle_rviz_pub.publish([obstacle.toPolygonStamped()])
         #obstacle.step()
-        
         #rate.sleep()
     
         obstacle = ModelState()
         model = rospy.wait_for_message('gazebo/model_states', ModelStates)
+
+
+
         for i in range(len(model.name)):
 
             if model.name[i] == 'obstacle':
@@ -62,24 +83,49 @@ def sim():
                 obstacle.twist = Twist()
                 obstacle.twist.angular.z = 0
 
-                if int(t / 100) % 4 < 2:
-                    obstacle.twist.linear.y = -0.6
+                #if int(t / 100) % 4 < 2:
+                #if int(t / 100) % 4 < 1.5:
+                if(t >0):
+                    obstacle.twist.linear.x = 0.7
+
                 else:
-                    obstacle.twist.linear.y = 0.6
+                    obstacle.twist.linear.y = 0
+
+                #if(t > -100000 and t < -98000):
+                #    obstacle.twist.linear.y = 0
+
+
+                #if(obstacle.pose.position.x <-1):
+                #    t = -100000
+
+                #obstacle.twist.linear.x = -0.7
+
+                if(c.start_trg <1):
+                    t = 0
+                    obstacle.twist.linear.x = 0
+                    obstacle.pose.position.x = 0
+                    obstacle.pose.position.y = -2
                 pub_model.publish(obstacle)
                 t += 1
-                time.sleep(0.1)
+
+                #logger.info()
+
+                #time.sleep(0.1)
         rate.sleep()
 
 
 
 
 class Obstacle:
-    def __init__(self, vertices=[[0, 0, 1, 1], [0, 1, 1, 0]], vel = [[0,0]]):
+    def __init__(self, vertices, vel):
+   # def __init__(self, vertices=[[0, 0, 1, 1], [0, 1, 1, 0]], vel=[[0, 0]]):
+
         self.poly = np.array(vertices) * 1.0
         self.v = np.array(vel).T * 1.0
         self.dt = 0.1
         self.i = 0
+
+
     '''
     def step(self):
         if self.i == 150:
@@ -107,7 +153,9 @@ class Obstacle:
         for i in range(len(p.polygon.points)):
             p.polygon.points[i].x = self.poly[0][i]
             p.polygon.points[i].y = self.poly[1][i]
+            
         return p
+
 
     def toTwist(self):
         t = Twist()
@@ -116,11 +164,62 @@ class Obstacle:
         print(self.v)
         return t
 
-'''
-def main():
-    rospy.init_node('moving_obstacle')
-    moving = Moving()
-'''
+
+
+class Callback:
+    def __init__(self):
+        self.start_trg = 0
+        self.x = [0, 0, 0, 0, 0]
+        self.tra_x =[0]
+        self.tra_y =[0]
+        self.old_x = 0
+        self.old_y = 0
+        self.tra_num = 0
+        self.total_dis = 0
+
+    def odom_callback(self, msg):
+        _,_,yaw = euler_from_quaternion([msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w])
+        self.x = [msg.pose.pose.position.x,
+                  msg.pose.pose.position.y,
+                  yaw,
+                  msg.twist.twist.linear.x,
+                  msg.twist.twist.angular.z]
+
+    def path_callback(self, msg):
+
+        if(len(msg.poses) > 0):
+            self.start_trg = 1
+        return
+
+    def toTrajectory(self):
+
+        dis = np.sqrt(pow(self.old_x-self.x[0], 2) + pow(self.old_y-self.x[1], 2))
+        if dis > 0.05 :
+            self.tra_x.append(self.x[0])
+            self.tra_y.append(self.x[1])
+            self.old_x = self.x[0]
+            self.old_y = self.x[1]
+            self.tra_num = self.tra_num + 1
+            self.total_dis = self.total_dis + dis
+
+        poseArray = []
+
+        if self.tra_num == 0:
+            return
+
+        for i in range(self.tra_num):
+            poses = PoseStamped()
+            poses.pose.position.x = self.tra_x[i]
+            poses.pose.position.y = self.tra_y[i]
+            poseArray += [poses]
+        trajectory = Path()
+        trajectory.header.frame_id = 'odom'
+        trajectory.poses = poseArray
+
+        return trajectory
+
+
+
 
 if __name__ == '__main__':
    # main()  

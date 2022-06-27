@@ -9,7 +9,8 @@ class Cfs:
         self.vision = 3.0                   # how far ahead to plan path
         self.margin = margin                # buffer around obstacle
         self.nstep = nstep                  # length of path
-        self.c = np.array([0.1,20,5])       # [penalize for change in path | change in velocity | change in acceleration]
+        self.c = np.array([0.5,40,20])       # np.array([0.1,20,5])   [penalize for change in path | change in velocity | change in acceleration]
+        #self.c = np.array([0.5,20,5])
         self.Q2 = []                        # velocity change matrix
         self.Q3 = []                        # acceleration change matrix
         self.Vref_1 = []
@@ -23,24 +24,53 @@ class Cfs:
         self.dt = 0.5
         self.set_costs()
         self.barrier = 1.5
+        self.Vmax = 1.5
 
     def set_costs(self):
+
         Vx = 0.1
 
         # velocity
-        Vconst = np.concatenate([np.concatenate([-np.eye(2), np.eye(2), np.zeros([2,(self.nstep-2)*2])], axis=1),
-                                np.concatenate([np.zeros([(self.nstep-1)*2,2]), np.eye((self.nstep-1)*2)], axis=1)
-                                -np.concatenate([np.eye((self.nstep-1)*2), np.zeros([(self.nstep-1)*2,2])], axis=1)])
+        Vconst = np.concatenate([np.zeros([2,(self.nstep)*2]),
+                                 np.concatenate([np.zeros([(self.nstep-1)*2,2]), np.eye((self.nstep-1)*2)], axis=1)
+                                 -np.concatenate([np.eye((self.nstep-1)*2), np.zeros([(self.nstep-1)*2,2])], axis=1)])
+        #Vconst = np.concatenate([np.concatenate([-np.eye(2), np.eye(2), np.zeros([2,(self.nstep-2)*2])], axis=1),
+        #                        np.concatenate([np.zeros([(self.nstep-1)*2,2]), np.eye((self.nstep-1)*2)], axis=1)
+        #                        -np.concatenate([np.eye((self.nstep-1)*2), np.zeros([(self.nstep-1)*2,2])], axis=1)])
+
         V_ratio = np.array([[1, 0], [0, 1]])
         Rpenalty = np.kron(np.eye(self.nstep),V_ratio)
         self.Q2 = Vconst.T.dot(Rpenalty.T.dot(Rpenalty)).dot(Vconst)
-        # Vref = np.array([[Vx,0]])*self.dt
+        # Vref = np.array([[Vx,0]])*self.dtxsdwc xsd<<<xxx
         # self.Vref_1 = self.c[1]*np.kron(np.ones([1, self.nstep]).flatten(),Vref).dot((Rpenalty.T.dot(Rpenalty)).dot(Vconst))
         
         # acceleration
         Vdiff = np.eye(self.nstep*2)-np.diag(np.ones([1,(self.nstep-1)*2]).flatten(),2)                                 # 1 along diagonal, -1 at 2nd above diagonal
         Adiff = Vdiff - np.diag(np.ones([1,(self.nstep-1)*2]).flatten(),2) + np.diag(np.ones([1,(self.nstep-2)*2]).flatten(),2*2)    # [1 0 -2 0 1] repeated along/right of diagonal
         self.Q3 = Adiff[0:(self.nstep-2)*2,:].T.dot(Adiff[0:(self.nstep-2)*2,:])
+
+    '''
+    def set_costs(self):
+
+        Vx = 0.1
+
+        # velocity
+        Vconst = np.concatenate([np.concatenate([-np.eye(2), np.eye(2), np.zeros([2,(self.nstep-2)*2])], axis=1),
+                                 np.concatenate([np.zeros([(self.nstep-1)*2,2]), np.eye((self.nstep-1)*2)], axis=1)
+                                 -np.concatenate([np.eye((self.nstep-1)*2), np.zeros([(self.nstep-1)*2,2])], axis=1)])
+
+
+        V_ratio = np.array([[1, 0], [0, 1]])
+        Rpenalty = np.kron(np.eye(self.nstep),V_ratio)
+        self.Q2 = Vconst.T.dot(Rpenalty.T.dot(Rpenalty)).dot(Vconst)
+        # Vref = np.array([[Vx,0]])*self.dtxsdwc xsd<<<xxx
+        # self.Vref_1 = self.c[1]*np.kron(np.ones([1, self.nstep]).flatten(),Vref).dot((Rpenalty.T.dot(Rpenalty)).dot(Vconst))
+
+        # acceleration
+        Vdiff = np.eye(self.nstep*2)-np.diag(np.ones([1,(self.nstep-1)*2]).flatten(),2)                                 # 1 along diagonal, -1 at 2nd above diagonal
+        Adiff = Vdiff - np.diag(np.ones([1,(self.nstep-1)*2]).flatten(),2) + np.diag(np.ones([1,(self.nstep-2)*2]).flatten(),2*2)    # [1 0 -2 0 1] repeated along/right of diagonal
+        self.Q3 = Adiff[0:(self.nstep-2)*2,:].T.dot(Adiff[0:(self.nstep-2)*2,:])
+    '''
 
     def set_margin(self, margin):
 
@@ -50,10 +80,13 @@ class Cfs:
         self.barrier = barrier
 
     def update_pos(self, x):
+
+
         self.x = x
         self.z0 = np.array([[x[0]], [x[1]]])                 # current: x0, y0
         self.zT = self.z0
         goalVector = self.zG - self.zT
+
         L = np.linalg.norm(goalVector)
         if L == 0:
             self.zT = self.zT
@@ -61,14 +94,85 @@ class Cfs:
             self.zT = self.zT + (3/L) * goalVector
         else:
             self.zT = self.zT + goalVector
+
+
+        self.path = np.concatenate([[np.linspace(self.z0[0], self.zT[0],self.nstep)], [np.linspace(self.z0[1], self.zT[1],self.nstep)]])
+
+    def f_update_pos(self, x):
+
+
+        self.x = x
+        self.z0 = x                # current: x0, y0
+        self.zT = self.z0
+        goalVector = self.zG - self.zT
+
+        L = np.linalg.norm(goalVector)
+        if L == 0:
+            self.zT = self.zT
+        elif L > 3:
+            self.zT = self.zT + (3/L) * goalVector
+        else:
+            self.zT = self.zT + goalVector
+
         self.path = np.concatenate([[np.linspace(self.z0[0], self.zT[0],self.nstep)],
-                           [np.linspace(self.z0[1], self.zT[1],self.nstep)]])
+                                        [np.linspace(self.z0[1], self.zT[1],self.nstep)]])
+
+
 
     def update_cost(self):
+
+        #direction = np.array([self.zT[0]-self.z00[0], self.zT[1]-self.z00[1]])
+        #dir_T = (1/np.linalg.norm(direction))*(np.array([self.zT[1], -self.zT[0]-6])).T
+        # dd = np.kron(np.ones([self.nstep,1]), dir_T.dot(np.array([[-6], [0]])))
+
+        #if(refpath == []):
+        #    dd = np.kron(np.ones([self.nstep,1]), np.array([self.zG[0],self.zG[1]]))
+        #else:
+        #    dd_tem = np.zeros([self.nstep*2,1])
+        #    for i in range(self.nstep*2):
+        #        dd_tem[i] = refpath[i]
+        #    dd = dd_tem
+        dd = np.kron(np.ones([self.nstep,1]), np.array([self.zG[0],self.zG[1]]))
+
+        # D = np.kron(np.eye(self.nstep),dir_T)
+
+        # print(np.shape(D))
+        Q11 = np.eye((self.nstep-1)*2)
+        Q1 = scipy.linalg.block_diag(Q11, 10*np.eye(2))
+        #Q1 = np.eye(self.nstep*2)
+        Xdis_1 = self.c[0]*dd.T.dot(Q1)
+        self.Vref_1 = self.c[1]*dd.T.dot(self.Q2)
+        # Q1 = D.T.dot(D)
+        Qref = Q1*self.c[0] + self.Q2*self.c[1] + self.Q3*self.c[2]
+        Mcurv = np.eye(self.nstep)
+        Mcurv[-1,-1] = 5
+        Qcurv = 5*Mcurv
+        Qe = scipy.linalg.block_diag(Qref, Qcurv)
+
+        H = scipy.linalg.block_diag(Qe, 50*np.diag(np.ones([1,(self.nobj+1)*self.nstep]).flatten()))
+        f = np.concatenate([-np.concatenate([Xdis_1.T, np.zeros([self.nstep,1])])-np.concatenate([self.Vref_1.T, np.zeros([self.nstep,1])]),
+                            np.zeros([(self.nobj+1)*self.nstep,1])])
+
+        Aeq = np.zeros([2, self.nstep*2 + self.nstep + (self.nobj+1)*self.nstep])
+        Aeq[0:2, 0:2] = np.eye(2)
+        #beq = self.path[:,0].reshape(2,1)
+        beq = self.path[:,0]
+        beq = beq.astype(np.double)
+
+        H = cvxopt.matrix(H)
+        f = cvxopt.matrix(f)
+        Aeq = cvxopt.matrix(Aeq)
+        beq = cvxopt.matrix(beq)
+
+        return H, f, Aeq, beq
+    '''
+    def update_cost(self):
+
         #direction = np.array([self.zT[0]-self.z00[0], self.zT[1]-self.z00[1]])
         #dir_T = (1/np.linalg.norm(direction))*(np.array([self.zT[1], -self.zT[0]-6])).T
         # dd = np.kron(np.ones([self.nstep,1]), dir_T.dot(np.array([[-6], [0]])))
         dd = np.kron(np.ones([self.nstep,1]), np.array([self.zG[0],self.zG[1]]))
+
         # D = np.kron(np.eye(self.nstep),dir_T)
         # print(np.shape(D))
         Q1 = np.eye(self.nstep*2)
@@ -80,6 +184,7 @@ class Cfs:
         Mcurv[-1,-1] = 5
         Qcurv = 5*Mcurv
         Qe = scipy.linalg.block_diag(Qref, Qcurv)
+
         H = scipy.linalg.block_diag(Qe, 50*np.diag(np.ones([1,(self.nobj+1)*self.nstep]).flatten()))
         f = np.concatenate([-np.concatenate([Xdis_1.T, np.zeros([self.nstep,1])])-np.concatenate([self.Vref_1.T, np.zeros([self.nstep,1])]),
                             np.zeros([(self.nobj+1)*self.nstep,1])])
@@ -95,54 +200,111 @@ class Cfs:
         beq = cvxopt.matrix(beq)
 
         return H, f, Aeq, beq
+    '''
+    def optimize(self, obstacles, vels, x, goal, f_waypoints, human=None):
 
-    def optimize(self, obstacles, vels, x, goal, human=None):
         self.nobj = len(obstacles)
+
         self.z00 = self.z0
         if goal == None:
             goal = [0,0]
-        self.zG = np.array([[goal[0]], [goal[1]]])  
-        self.update_pos(x)
 
-        H, f, Aeq, beq = self.update_cost()
+        self.zG = np.array([[goal[0]], [goal[1]]])
+
+        start_fw = 1
+        if(f_waypoints == []):
+            self.update_pos(x)
+        else:
+            if(len(f_waypoints[0])>start_fw):
+                fw_temp = np.array([[f_waypoints[0,start_fw]], [f_waypoints[1,start_fw]]])
+                self.f_update_pos(fw_temp)
+            else:
+                self.update_pos(x)
 
         # The Iteration
         refpath = self.path.flatten('F')
 
+        H, f, Aeq, beq = self.update_cost()
+
         save1,save2= 0,0
 
         for k in range(10):
-            Lstack = np.array([[]]*((self.nstep*3)+self.nstep*self.nobj+self.nstep)).T
-            Sstack = np.array([[]]*1).T
+            #start_time = time.time()
+
+            #Lstack = np.array([[]]*((self.nstep*3)+self.nstep*self.nobj+self.nstep)).T
+            #Sstack = np.array([[]]*1).T
+            #Lstack = np.zeros([self.nstep*(self.nobj+1)*2,self.nstep*(self.nobj+4)])
+            #Sstack = np.zeros([self.nstep*(self.nobj+1)*2,1])
+            Lstack = np.zeros([self.nstep*(self.nobj+3)*2,self.nstep*(self.nobj+4)])
+            Sstack = np.zeros([self.nstep*(self.nobj+3)*2,1])
+
             for i in range(self.nstep):
                 for j in range(self.nobj):
-                    # for each object
+                    # for each objectrefpath
                     poly = obstacles[j]+vels[j]*np.ones((1,4))*self.dt*i                  # position of obstacle at time i (initial position, + velocity*time)
                     L,S,d = self.d2poly(refpath[i*2:(i+1)*2].T, poly.T)
-                    
-                    Lstack = np.concatenate([Lstack,
-                                             np.concatenate([np.zeros([1,i*2]), L, np.zeros([1,(self.nstep-(i+1))*2]), np.zeros([1,self.nstep]),
-                                                             np.zeros([1,i*self.nobj+j]), np.array([[-1]]), np.zeros([1,self.nobj*(self.nstep-i)-(j+1)]), np.zeros([1,self.nstep])], axis=1)])
-                    Sstack = np.concatenate([Sstack, S-self.margin])
+                    #Lstack = np.concatenate([Lstack,
+                    #                         np.concatenate([np.zeros([1,i*2]), L, np.zeros([1,(self.nstep-(i+1))*2]), np.zeros([1,self.nstep]),
+                    #                                         np.zeros([1,i*self.nobj+j]), np.array([[-1]]), np.zeros([1,self.nobj*(self.nstep-i)-(j+1)]), np.zeros([1,self.nstep])], axis=1)])
+
+                    #Sstack = np.concatenate([Sstack, S-self.margin])
                     # Soft constraint
-                    Lstack = np.concatenate([Lstack, np.concatenate([np.zeros([1,self.nstep*3]), np.zeros([1,i*self.nobj+j]), np.array([[-1]]), np.zeros([1,self.nobj*(self.nstep-i)-(j+1)]), np.zeros([1,self.nstep])], axis=1)])
-                    Sstack = np.concatenate([Sstack, np.array([[0]])])
+                    #Lstack = np.concatenate([Lstack, np.concatenate([np.zeros([1,self.nstep*3]), np.zeros([1,i*self.nobj+j]), np.array([[-1]]), np.zeros([1,self.nobj*(self.nstep-i)-(j+1)]), np.zeros([1,self.nstep])], axis=1)])
+                    #Sstack = np.concatenate([Sstack, np.array([[0]])])
+
+                    Lstack[(self.nobj*i+j)*2,i*2:i*2+2] = L
+                    Lstack[(self.nobj*i+j)*2:1+(self.nobj*i+j)*2,3*self.nstep+i*self.nobj+j] = -1
+                    Sstack[(self.nobj*i+j)*2] = S-self.margin
 
             for i in range(self.nstep):
                 if human:
-                    l1,l2, S = self.gradient(refpath[i*2:(i+1)*2].T, human)
+                    l1,l2, S = self.gradient(refpath[i*2:(i+1)*2].T, human,i)
                 else:
-                    l1,l2, S = self.gradient(refpath[i*2:(i+1)*2].T, goal)
+                    l1,l2, S = self.gradient(refpath[i*2:(i+1)*2].T, goal,i)
                 if not l2 == 0:
                     if i == 0:
                         save1 = -l1/l2
                         save2 = -S/l2
-                Lstack = np.concatenate([Lstack,
-                                         np.concatenate([np.zeros([1,i*2]), np.array([[l1, l2]]), np.zeros([1,(self.nstep-(i+1))*2]), np.zeros([1,self.nstep+self.nstep*self.nobj]),
-                                                         np.zeros([1,i]), np.array([[-1]]), np.zeros([1,self.nstep-(i+1)])], axis=1)])
-                Sstack = np.concatenate([Sstack, np.array([[-S]])])
-                Lstack = np.concatenate([Lstack, np.concatenate([np.zeros([1,self.nstep*(3+self.nobj)]), np.zeros([1,i]), np.array([[-1]]), np.zeros([1,self.nstep-(i+1)])], axis=1)])
-                Sstack = np.concatenate([Sstack, np.array([[0]])])
+                #Lstack = np.concatenate([Lstack,
+                #                         np.concatenate([np.zeros([1,i*2]), np.array([[l1, l2]]), np.zeros([1,(self.nstep-(i+1))*2]), np.zeros([1,self.nstep+self.nstep*self.nobj]),
+                #                                         np.zeros([1,i]), np.array([[-1]]), np.zeros([1,self.nstep-(i+1)])], axis=1)])
+                #Sstack = np.concatenate([Sstack, np.array([[-S]])])
+                #Lstack = np.concatenate([Lstack, np.concatenate([np.zeros([1,self.nstep*(3+self.nobj)]), np.zeros([1,i]), np.array([[-1]]), np.zeros([1,self.nstep-(i+1)])], axis=1)])
+                #Sstack = np.concatenate([Sstack, np.array([[0]])])
+
+                Lstack[self.nstep*self.nobj*2+i*2,i*2:i*2+2] = [l1,l2]
+                Lstack[self.nstep*self.nobj*2+i*2:1+self.nstep*self.nobj*2+i*2,self.nstep*(3+self.nobj)+i] = -1
+                Sstack[self.nstep*self.nobj*2+i*2] = -S
+
+                '''
+                #v < Vmax
+                Lstack[self.nobj*(self.nstep+1)*2+i,i] = 1
+                Lstack[self.nobj*(self.nstep+1)*2+i,i+2] = -1
+                Sstack[self.nobj*(self.nstep+1)*2+i] = self.Vmax*self.dt
+
+                # -Vmax < v
+                Lstack[self.nobj*(self.nstep+2)*2+i,i] = -1
+                Lstack[self.nobj*(self.nstep+2)*2+i,i+2] = 1
+                Sstack[self.nobj*(self.nstep+2)*2+i] = self.Vmax*self.dt
+                '''
+
+                if(i <self.nstep-1):
+                    Lstack[2*self.nstep*(self.nobj+1)+2*i,2*i] = 1
+                    Lstack[2*self.nstep*(self.nobj+1)+2*i+1,2*i+1] = 1
+                    Lstack[2*self.nstep*(self.nobj+1)+2*i,2*(i+1)] = -1
+                    Lstack[2*self.nstep*(self.nobj+1)+2*i+1,2*(i+1)+1] = -1
+                #Sstack[2*self.nstep*(self.nobj)+i*2] = self.Vmax*self.dt
+                #Sstack[2*self.nstep*(self.nobj)+i*2+1] = self.Vmax*self.dt
+
+
+                if(i <self.nstep-1):
+                    Lstack[2*self.nstep*(self.nobj+2)+2*i,2*i] = -1
+                    Lstack[2*self.nstep*(self.nobj+2)+2*i+1,2*i+1] = -1
+                    Lstack[2*self.nstep*(self.nobj+2)+2*i,2*(i+1)] = 1
+                    Lstack[2*self.nstep*(self.nobj+2)+2*i+1,2*(i+1)+1] = 1
+                #Sstack[2*self.nstep*(self.nobj)+i*2] = self.Vmax*self.dt
+                #Sstack[2*self.nstep*(self.nobj)+i*2+1] = self.Vmax*self.dt
+            Sstack[2*self.nstep*(self.nobj+1):2*self.nstep*(self.nobj+3)] = self.Vmax*self.dt
 
             # Velocity constraint
             # for i in range(self.nstep - 1):
@@ -165,9 +327,12 @@ class Cfs:
             Lstack = cvxopt.matrix(Lstack)
             Sstack = cvxopt.matrix(Sstack)
             cvxopt.solvers.options['show_progress'] = False
+
             soln = cvxopt.solvers.qp(H,f,Lstack,Sstack,Aeq,beq)
             soln = soln['x']
+
             refpath = soln[0:2*self.nstep]
+
         return refpath, (save1, save2)
 
     def d2poly(self, point, poly):
@@ -230,9 +395,20 @@ class Cfs:
         half = (a+b+c)/2
         return math.sqrt(half*(half-a)*(half-b)*(half-c))
 
-    def gradient(self, point, center):
-        x0 = center[0]
-        y0 = center[1]
+    def gradient(self, point, center,i):
+
+        if (center == []):
+            x0 = center[0]
+            y0 = center[1]
+        else:
+            if (len(center) <3):
+                x0 = center[0]
+                y0 = center[1]
+            else:
+                #x0 = center[0]
+                #y0 = center[1]
+                x0 = center[0]+(center[2]*i*self.dt)*2
+                y0 = center[1]+(center[3]*i*self.dt)*2
         x_r = point[0]
         y_r = point[1]
         margin = self.barrier

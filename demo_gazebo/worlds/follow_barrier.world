@@ -59,13 +59,34 @@
       </link>
     </model>
 
+    <model name="obstacle1">
+      <pose>-2 0 0 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
     <model name="obstacle2">
-      <pose>2 -1 0 0 0 0</pose>
+      <pose>-2 -1.5 0 0 0 0</pose>
       <link name="link">
         <collision name="collision">
           <geometry>
             <box>
-              <size>1.6 1.6 1.6</size>
+              <size>1 1 1</size>
             </box>
           </geometry>
         </collision>
@@ -73,33 +94,17 @@
         <visual name="visual">
           <geometry>
             <box>
-              <size>1.6 1.6 1.6</size>
+              <size>1 1 1</size>
             </box>
           </geometry>
         </visual>
       </link>
     </model>
 
-    <model name="obstacle3">
-      <pose>-3 -2 0 0 0 1.2</pose>
-      <link name="link">
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>1.6 1.6 1.6</size>
-            </box>
-          </geometry>
-        </collision>
 
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>1.6 1.6 1.6</size>
-            </box>
-          </geometry>
-        </visual>
-      </link>
-    </model>
+
+
+
 
   </world>
 

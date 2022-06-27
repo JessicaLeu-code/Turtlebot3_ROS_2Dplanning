@@ -9,11 +9,18 @@ from nav_msgs.msg import Odometry, Path
 from tf.transformations import euler_from_quaternion
 from cfs_module_barrier import Cfs
 
+import time
+import logging
 
 def sim():
 	rospy.init_node('optimization')
 	o = Optimizer()
 	c = Cfs(21, 0)
+
+
+	logger = logging.getLogger("testtest")
+	sh = logging.StreamHandler()
+	logger.addHandler(sh)
 
 	rospy.Subscriber('/odom', Odometry, o.odom_callback)
 	rospy.Subscriber('/filteredGPS', Point, o.filter_callback)
@@ -23,12 +30,14 @@ def sim():
 	#rospy.Subscriber('/obstacle2_v', Twist, o.lobstacle_vel_callback)
 	rospy.Subscriber('/human', Point32, o.human_callback)
 	rospy.Subscriber('/goal_state', Point32, o.goal_callback)
+	rospy.Subscriber('follower_path', Path, o.follow_path_callback)
+	rospy.Subscriber('obstacle2_v', Twist, o.human_Twist_callback)
 
 	path_pub = rospy.Publisher('/path', Path, queue_size=100)
 	margin_rviz_pub = rospy.Publisher('/margins', PolygonStamped, queue_size=100)
 	goal_pub = rospy.Publisher('/goalrviz', PointStamped, queue_size=100)
 	line_viz = rospy.Publisher('/line', Marker, queue_size=50)
-	cmv_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+
 
 	rate = rospy.Rate(10)
 	try:
@@ -38,14 +47,23 @@ def sim():
 		
 	c.set_barrier(barrier)
 
+
 	while not rospy.is_shutdown():
+
 		o.move_pred()
 		c.set_margin(o.margin)
+
 		obstacles = o.obstacles + o.lidar_obs
 		vels = o.vels + o.lidar_vels
 
-		refpath, linegen = c.optimize(obstacles, vels, o.x, o.goal, human=o.human) # o.human if tracking human
-		
+		#logger.info(o.human[2])
+
+		if(np.sum(o.human)!=0):
+			refpath, linegen = c.optimize(obstacles, vels, o.x, o.goal, o.f_waypoints, human=o.human) # o.human if tracking human
+		else:
+			refpath = [0]
+			linegen = [0,0]
+
 		marker = Marker()
 		marker.header.frame_id = "/odom"
 		marker.type = marker.LINE_STRIP
@@ -66,6 +84,8 @@ def sim():
 		marker.points = pts
 		line_viz.publish(marker)
 
+
+
 		if stopCheck(refpath, 0.2):
 			path = to_path(refpath)
 			path_pub.publish(path)
@@ -73,11 +93,24 @@ def sim():
 			path = to_path([])
 			path_pub.publish(path)
 
+		#elapsed_time = time.time() - start_time
+		#logger.info("path_pub.publish(path)")
+		#logger.info(elapsed_time)
+
+
 		margin = o.get_margin_polygon()
+
 		margin_rviz_pub.publish(margin)
 		goal_pub.publish(o.get_goal())
 
+		#elapsed_time = time.time() - start_time
+		#logger.info("margin")
+		#logger.info(elapsed_time)
+
+		#logger.info("-----------------")
+
 		rate.sleep()
+
 
 # publish path only if length of the path is greater than threshold
 def stopCheck(refpath, thres):
@@ -99,11 +132,13 @@ def stopCheck(refpath, thres):
 
 def to_path(refpath):
 	poseArray = []
+
 	for i in range(len(refpath)/2):
 		poses = PoseStamped()
 		poses.pose.position.x = refpath[2*i]
 		poses.pose.position.y = refpath[2*i+1]
 		poseArray += [poses]
+
 	waypoints = Path()
 	waypoints.header.frame_id = 'odom'
 	waypoints.poses = poseArray
@@ -124,8 +159,9 @@ class Optimizer:
 		self.p_stop = 0.5
 		self.p_go = 0.5
 		self.xyz = np.zeros(3)
-		self.goal = [-2, 2]
-		self.human = None
+		self.goal = [2, -4]
+		self.human = [0,0,0,0]
+		self.f_waypoints = []
 
 	# checks if lidar object (human) is coming toward robot. if so, do not stop robot
 	def incomingCheck(self):
@@ -142,6 +178,7 @@ class Optimizer:
 		# Uncomment to run experiment
 		#self.x[0] = self.xyz[0]
 		#self.x[1] = self.xyz[1]
+
 	def dist(self):
 		return np.linalg.norm(np.array(self.x[0:2]) - np.array(self.goal))
 
@@ -156,12 +193,16 @@ class Optimizer:
 		self.goal[1] = msg.y
 
 	def human_callback(self, msg):
-		if not self.human:
-			self.human = [msg.x, msg.y]
-			return
+		#if not self.human:
+		#	self.human = [msg.x, msg.y]
+		#	return
 
 		self.human[0] = msg.x
 		self.human[1] = msg.y
+
+	def human_Twist_callback(self,msg):
+		self.human[2] = msg.linear.x
+		self.human[3] = msg.linear.y
 
 	def get_goal(self):
 		g = PointStamped()
@@ -172,6 +213,7 @@ class Optimizer:
 
 	def obstacle_poly_callback(self, msg):
 		pts = [[], []]
+
 		for i in range(len(msg.polygon.points)):
 			pts = np.concatenate((pts, [[msg.polygon.points[i].x], [msg.polygon.points[i].y]]), axis=1)
 		self.obstacles = [pts]
@@ -186,6 +228,7 @@ class Optimizer:
 
 
 	def lobstacle_poly_callback(self, msg):
+
 		self.lidar_obs = []
 		self.lidar_vels = []
 		for j in range(len(msg.polygons)):
@@ -197,10 +240,22 @@ class Optimizer:
 			vel = np.array([[msg.vels[j].linear.x], [msg.vels[j].linear.y]])
 			self.lidar_vels.append(vel)
 
+
+
 	def lobstacle_vel_callback(self, msg):
 		vel = np.array([[msg.linear.x], [msg.linear.y]])
 		self.lidar_vels = [vel]
 
+	def follow_path_callback(self, msg):
+		logger = logging.getLogger("testtest")
+		sh = logging.StreamHandler()
+		logger.addHandler(sh)
+
+		self.f_waypoints = np.zeros([2,len(msg.poses)])
+
+		for i in range(0, len(msg.poses)):
+			self.f_waypoints[0,i] = msg.poses[i].pose.position.x
+			self.f_waypoints[1,i] = msg.poses[i].pose.position.y
 
 	def move_pred(self):
 		r1 = 2
@@ -225,6 +280,7 @@ class Optimizer:
 		if self.pobs == []:
 			return 0.3
 		omega = np.std(self.pobs[-10:] * self.hobs[:, -10:], axis=1)
+
 		return 0.2+omega[1]
 
 	def get_margin_polygon(self):
@@ -263,8 +319,6 @@ class Optimizer:
 			p.polygon.points[i].x = poly[0][i]
 			p.polygon.points[i].y = poly[1][i]
 		return p
-
-
 
 
 if __name__ == '__main__':

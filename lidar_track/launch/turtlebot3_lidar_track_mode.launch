@@ -2,7 +2,9 @@
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
   <arg name="x_pos" default="0.0"/>
   <arg name="y_pos" default="0.0"/>
+
   <arg name="z_pos" default="0.0"/>
+
 
   <remap from="odom" to="odom"/>
   <remap from="scan" to="scan"/>
@@ -30,6 +32,7 @@
 
   <node name="prediction" pkg="planning" type="prediction_barrier.py"/>
   <node name="test" pkg="planning" type="obstacle_ctr.py">
+
 
     <param name="~barrier_radius" value="1.2" />
   </node>

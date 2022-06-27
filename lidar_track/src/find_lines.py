@@ -15,6 +15,8 @@ from tf import TransformListener
 from nav_msgs.msg import Odometry
 from visualization_msgs.msg import Marker, MarkerArray
 
+import logging
+
 from multiprocessing import Queue
 
 import sys
@@ -85,6 +87,7 @@ class Obstacle(object):
 		self.cov = np.zeros((7,7))
 		self.isHuman = False
 
+
 	# returns midpt of the measured line from lidar
 	def center(self):
 		if self.poly == None:
@@ -102,6 +105,7 @@ class Obstacle(object):
 			obs_y += y
 
 		obs_p = [obs_x/2, obs_y/2]
+
 		return obs_p
 
 	def center_sq(self):
@@ -229,6 +233,14 @@ class Obstacle(object):
 		vel = Twist()
 		vel.linear.x = self.mean[1]
 		vel.linear.y = self.mean[4]
+
+		logger = logging.getLogger("testtest")
+		sh = logging.StreamHandler()
+		logger.addHandler(sh)
+		#logger.info(self.mean[1])
+
+
+
 		return vel
 
 # for now, if no human exists, assume closest object to table is the human. Returns human
@@ -240,7 +252,8 @@ def checkHuman(objects, prevHuman=None):
 	area_mat = np.zeros(len(objects))
 
 	for i,o in enumerate(objects):	
-		dist_mat[i] = 0.1*((o.mean[0] - 0)**2 + (o.mean[3] - 4)**2)    # TODO: change location of table
+		#dist_mat[i] = 0.1*((o.mean[0] - 0)**2 + (o.mean[3] - 4)**2)    # TODO: change location of table
+		dist_mat[i] = 0.1*((o.mean[0] - 1)**2 + (o.mean[3] + 3.5)**2)
 		if not prevHuman is None:
 			dist, area = calc_sim(o, prevHuman)
 			dist_mat[i] += dist
@@ -275,10 +288,15 @@ class FindObstacles(object):
 	# per complete scan, we publish (potentially) multiple PolygonStamped
 	# msgs to /obstacles, all with the same header.seq value (self.id)
 	def __init__(self, viz=True, experiment=None):
+
+		logger = logging.getLogger("testtest")
+		sh = logging.StreamHandler()
+		logger.addHandler(sh)
+
 		self.id = 1
 		rospy.init_node('obstacles_node')
 		self.tf = TransformListener()
-		self.num_obj = 11
+		self.num_obj = 1
 		
 		pub = rospy.Publisher('/obstacles', Polygons, queue_size=50)
 		
@@ -303,7 +321,11 @@ class FindObstacles(object):
 				human_pub = rospy.Publisher('/human', Point32, queue_size=10)
 				human_obs_pub = rospy.Publisher('obstacle2_poly', Polygons, queue_size=1)
 				human_v_pub = rospy.Publisher('obstacle2_v', Twist, queue_size=1)
+				#self.num_obj = 3
 				self.num_obj = 3
+
+
+
 
 		# keep track of real lines from the last frame
 		self.prev_real_lines = set()
@@ -368,6 +390,7 @@ class FindObstacles(object):
 			visual = MarkerArray()
 
 			ctr = 1
+
 			for o in obs_fil:
 
 				# inits kf if one doesn't exist for this obs
@@ -435,7 +458,9 @@ class FindObstacles(object):
 						human_obs_pub.publish(o.poly)
 						human_v_pub.publish(o.toVel())
 				if experiment == "-g":
-					if len(obs_fil) >= self.num_obj:       # currently hard-coded to assume num_obj objects
+
+					#if len(obs_fil) >= self.num_obj:       # currently hard-coded to assume num_obj objects
+					if len(obs_fil) >= 1:
 						polys = Polygons()
 						o = checkHuman(obs_fil, prevHuman=self.prevHuman)
 						self.prevHuman = o
@@ -459,6 +484,8 @@ class FindObstacles(object):
 							human_pub.publish(human_cen)
 							human_obs_pub.publish(polys)
 							human_v_pub.publish(o.toVel())
+
+
 
 
 		rospy.Subscriber('/publish_line_markers', Marker, find_lines_and_pub)
